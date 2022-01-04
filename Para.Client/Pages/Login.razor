@@ -1,0 +1,41 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject Para.Client.Services.IAuthService AuthService
+@inject IToastService Toaster
+
+<h3>Login</h3>
+
+<EditForm Model="@user" OnValidSubmit="HandleLogin">
+     <DataAnnotationsValidator />
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" @bind-Value="user.Email" class="form-control" />
+        
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText id="password" @bind-Value="user.Password" type="password" class="form-control" />
+       
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+    <ValidationSummary />
+</EditForm>
+
+@code {
+    private UserLogin user = new UserLogin();
+
+    private async void HandleLogin()
+    {
+        var result = await AuthService.Login(user);
+
+        if (result.Success) {
+            await LocalStorage.SetItemAsync<string>("authToken", result.Data);
+            await AuthStateProvider.GetAuthenticationStateAsync();
+            Toaster.ShowSuccess(result.Message);
+        }
+        else
+        {
+            Toaster.ShowError(result.Message);
+        }
+    }
+}

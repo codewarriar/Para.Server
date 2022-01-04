@@ -1,0 +1,69 @@
+﻿@page "/"
+@using Para.Client.Services
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject Para.Client.Services.IAuthService AuthService
+@inject Para.Client.Services.IStoryService _story
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Hi @context.User.Identity.Name . Welcome Back!</h1>
+        Let's Investigate<NavLink href="my-stories"> &rArr;Your Evidence</NavLink>
+         @*<UsersStoriesFeed></UsersStoriesFeed>*@
+        <div class="row">
+            <div class="col-6">
+                <Story></Story>
+           </div>
+            <div class="col-6">
+               @* This is going to be a component for posting a new investigation into the system for the logged in user.
+                    Below is just a placeholder displaying the User Claims.
+                    //TODO build form for post to API.*@
+
+              <UsersStoriesFeed></UsersStoriesFeed>             
+           </div>
+        </div> 
+    </Authorized>
+    <NotAuthorized>
+        <h1>Welcome To Everything Paranormal</h1>
+        <Login></Login>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+
+    [Parameter] public List<Stories> UserStories { get; set; } = new List<Stories>();
+
+    [Inject]
+    public IStoryService? storyService { get; set; }
+    private string _authMessage;
+    private string _surnameMessage;
+    private IEnumerable<Claim> _claims = Enumerable.Empty<Claim>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await GetClaimsPrincipalData();
+        //UserStories = await storyService.GetAllStories();
+        
+    }
+
+    private async Task GetClaimsPrincipalData()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            _authMessage = $"{user.Identity.Name} is authenticated.";
+            _claims = user.Claims;
+            _surnameMessage = $"Surname: {user?.FindFirst(c => c.Type == ClaimTypes.NameIdentifier).Value}";
+            var getuserstory = _story.GetUserStories(user.Identity.Name);
+        }
+        else
+        {
+            _authMessage = "The user is NOT authenticated.";
+        }
+    }
+}

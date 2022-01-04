@@ -1,0 +1,98 @@
+﻿@using Para.Client.Services
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject Para.Client.Services.IAuthService AuthService
+@inject Para.Client.Services.IStoryService _story
+@using System.Security.Claims
+
+<h3>Your Investigations</h3>
+
+ @if (UserStories.Count == 0)
+        @nullMessage
+
+
+
+
+
+
+        @*<div class="card">
+            <iframe src="@item.VideoUrl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <div class="card-body">
+                <h5 class="card-title">@item.Title</h5>
+                <p class="card-text">@item.Description</p>
+                <p class="card-text">By: &ensp; @item.User.Username</p>
+                <a href="#" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+        <br />
+        <br />*@
+
+
+    
+        <table class="table-active">
+            <tr>
+                <th>Title</th>
+                <th>Date/Time</th>
+                <th>Location</th>
+                <th>Evidence</th>
+            </tr>
+             @foreach (var item in UserStories)
+             {
+              <tr>
+                 
+                <td>@item.Title</td>
+                <td>@item.Date</td>
+                <td>@item.Location</td>
+                <td><a href="@item.VideoUrl">URL</a></td>
+                <br />
+             
+              </tr>
+             }
+        </table>
+    
+
+
+
+
+
+
+
+@code {
+    [Parameter] public List<Stories> UserStories { get; set; } = new List<Stories>();
+
+    [Inject]
+    public IStoryService storyService { get; set; }
+    private string _authMessage;
+    private string _surnameMessage;
+    public string nullMessage = $"You have no Investigations uploaded.";
+    private IEnumerable<Claim> _claims = Enumerable.Empty<Claim>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            _authMessage = $"{user.Identity.Name} is authenticated.";
+            _claims = user.Claims;
+            _surnameMessage = $"Surname: {user?.FindFirst(c => c.Type == ClaimTypes.NameIdentifier).Value}";
+            //UserStories = await storyService.GetUserStories(user.Identity.Name);
+        }
+        else
+        {
+            _authMessage = "The user is NOT authenticated.";
+        }
+        //await GetClaimsPrincipalData();
+        //UserStories = await storyService.GetAllStories();
+        UserStories = await storyService.GetUserStories(user.Identity.Name);
+        if (UserStories == null)
+        {
+            nullMessage = "You have no Investigations uploaded.";
+        }
+    }
+    private async Task GetClaimsPrincipalData()
+    {
+
+    }
+}
